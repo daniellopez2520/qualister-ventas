@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from "react";
-import { Plus, Search, X, RefreshCcw, Pencil, Landmark } from "lucide-react";
+import { Plus, Search, X, RefreshCcw, Pencil, Trash2, Landmark, Wrench } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -26,61 +26,74 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { PageHeader } from "@/components/common/PageHeader";
 import { DemoNotice, DemoTag } from "@/components/common/DemoNotice";
 import { StatusBadge } from "@/components/common/StatusBadge";
 import { EmptyState } from "@/components/common/EmptyState";
 import { formatMoneda, formatFecha } from "@/lib/format";
-import {
-  TARIFARIO,
-  MAGNITUDES,
-  MODALIDADES,
-  SERVICIOS_POR_MAGNITUD,
-  TIPO_CAMBIO_DEMO,
-} from "@/mocks";
+import { MAGNITUDES, MODALIDADES, TIPO_CAMBIO_DEMO } from "@/mocks";
+import { useTarifario } from "@/context/TarifarioContext";
 import { toast } from "sonner";
 
 const TODOS = "__todos__";
 const ESTADOS_TARIFA = ["Activo", "En revisión", "Inactivo"];
 
+const FORM_VACIO = {
+  codigo: "",
+  magnitud: "",
+  equipo: "",
+  variante: "",
+  modalidad: "Laboratorio",
+  precioMXN: "",
+  precioUSD: "",
+  tiempoEstimado: "",
+  vigencia: "",
+  estado: "Activo",
+};
+
 const TarifaFormSheet = ({ open, onOpenChange, tarifa, onGuardar }) => {
   const esEdicion = Boolean(tarifa);
-  const [form, setForm] = useState(
-    tarifa || {
-      codigo: "",
-      magnitud: "",
-      servicio: "",
-      variante: "",
-      modalidad: "Laboratorio",
-      precioMXN: "",
-      precioUSD: "",
-      tiempoEstimado: "",
-      vigencia: "",
-      estado: "Activo",
-    },
-  );
+  const [form, setForm] = useState(tarifa ? { ...FORM_VACIO, ...tarifa } : FORM_VACIO);
+  const [errores, setErrores] = useState({});
   const set = (k, v) => setForm((f) => ({ ...f, [k]: v }));
-  const servicios = (SERVICIOS_POR_MAGNITUD[form.magnitud] || []).map((s) => s.servicio);
-  const variantes =
-    ((SERVICIOS_POR_MAGNITUD[form.magnitud] || []).find((s) => s.servicio === form.servicio) || {})
-      .variantes || [];
+
+  const validar = () => {
+    const e = {};
+    if (!form.codigo.trim()) e.codigo = "Requerido";
+    if (!form.magnitud) e.magnitud = "Requerido";
+    if (!form.equipo.trim()) e.equipo = "Requerido";
+    if (form.precioMXN === "" || Number(form.precioMXN) < 0) e.precioMXN = "Requerido";
+    setErrores(e);
+    return Object.keys(e).length === 0;
+  };
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="right" data-testid="tarifa-form-sheet" className="flex w-full flex-col gap-0 p-0 sm:max-w-lg">
         <SheetHeader className="border-b px-5 py-4 text-left">
           <SheetTitle className="font-display">
-            {esEdicion ? "Editar tarifa" : "Nuevo servicio"}
+            {esEdicion ? "Editar equipo del tarifario" : "Nuevo equipo"}
           </SheetTitle>
           <SheetDescription>
-            Interfaz visual. La información no se guarda: el tarifario real se administrará con el
-            backend.
+            El tarifario es exclusivamente de equipos. Los cambios se aplican durante esta sesión
+            (no se guardan al recargar la página).
           </SheetDescription>
         </SheetHeader>
         <form
           className="flex min-h-0 flex-1 flex-col"
           onSubmit={(e) => {
             e.preventDefault();
+            if (!validar()) return;
             onGuardar(form);
           }}
         >
@@ -93,12 +106,16 @@ const TarifaFormSheet = ({ open, onOpenChange, tarifa, onGuardar }) => {
                 value={form.codigo}
                 onChange={(e) => set("codigo", e.target.value)}
                 placeholder="QLM-XXX-000"
+                aria-invalid={Boolean(errores.codigo)}
               />
+              {errores.codigo ? (
+                <p className="text-xs text-destructive">{errores.codigo}</p>
+              ) : null}
             </div>
             <div className="space-y-1.5">
               <Label>Magnitud</Label>
               <Select value={form.magnitud} onValueChange={(v) => set("magnitud", v)}>
-                <SelectTrigger data-testid="tarifa-form-magnitud">
+                <SelectTrigger data-testid="tarifa-form-magnitud" aria-invalid={Boolean(errores.magnitud)}>
                   <SelectValue placeholder="Selecciona magnitud" />
                 </SelectTrigger>
                 <SelectContent>
@@ -109,44 +126,33 @@ const TarifaFormSheet = ({ open, onOpenChange, tarifa, onGuardar }) => {
                   ))}
                 </SelectContent>
               </Select>
+              {errores.magnitud ? (
+                <p className="text-xs text-destructive">{errores.magnitud}</p>
+              ) : null}
             </div>
             <div className="space-y-1.5">
-              <Label>Servicio</Label>
-              <Select
-                value={form.servicio}
-                onValueChange={(v) => set("servicio", v)}
-                disabled={!form.magnitud}
-              >
-                <SelectTrigger data-testid="tarifa-form-servicio">
-                  <SelectValue placeholder={form.magnitud ? "Selecciona servicio" : "Elige primero la magnitud"} />
-                </SelectTrigger>
-                <SelectContent>
-                  {servicios.map((s) => (
-                    <SelectItem key={s} value={s}>
-                      {s}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Label htmlFor="tf-equipo">Equipo / instrumento</Label>
+              <Input
+                id="tf-equipo"
+                data-testid="tarifa-form-equipo"
+                value={form.equipo}
+                onChange={(e) => set("equipo", e.target.value)}
+                placeholder="Ej. Termómetro digital"
+                aria-invalid={Boolean(errores.equipo)}
+              />
+              {errores.equipo ? (
+                <p className="text-xs text-destructive">{errores.equipo}</p>
+              ) : null}
             </div>
             <div className="space-y-1.5">
-              <Label>Variante o alcance</Label>
-              <Select
+              <Label htmlFor="tf-variante">Variante / alcance</Label>
+              <Input
+                id="tf-variante"
+                data-testid="tarifa-form-variante"
                 value={form.variante}
-                onValueChange={(v) => set("variante", v)}
-                disabled={!form.servicio}
-              >
-                <SelectTrigger data-testid="tarifa-form-variante">
-                  <SelectValue placeholder={form.servicio ? "Selecciona variante" : "Elige primero el servicio"} />
-                </SelectTrigger>
-                <SelectContent>
-                  {variantes.map((v) => (
-                    <SelectItem key={v} value={v}>
-                      {v}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                onChange={(e) => set("variante", e.target.value)}
+                placeholder="Ej. -30 °C a 100 °C"
+              />
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
@@ -187,7 +193,11 @@ const TarifaFormSheet = ({ open, onOpenChange, tarifa, onGuardar }) => {
                   data-testid="tarifa-form-precio-mxn"
                   value={form.precioMXN}
                   onChange={(e) => set("precioMXN", e.target.value)}
+                  aria-invalid={Boolean(errores.precioMXN)}
                 />
+                {errores.precioMXN ? (
+                  <p className="text-xs text-destructive">{errores.precioMXN}</p>
+                ) : null}
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="tf-usd">Precio USD</Label>
@@ -226,7 +236,7 @@ const TarifaFormSheet = ({ open, onOpenChange, tarifa, onGuardar }) => {
               Cancelar
             </Button>
             <Button type="submit" data-testid="tarifa-form-submit-button">
-              Guardar
+              {esEdicion ? "Guardar cambios" : "Agregar equipo"}
             </Button>
           </div>
         </form>
@@ -236,6 +246,7 @@ const TarifaFormSheet = ({ open, onOpenChange, tarifa, onGuardar }) => {
 };
 
 const Tarifario = () => {
+  const { tarifas, agregarTarifa, actualizarTarifa, eliminarTarifa } = useTarifario();
   const [busqueda, setBusqueda] = useState("");
   const [fMagnitud, setFMagnitud] = useState(TODOS);
   const [fModalidad, setFModalidad] = useState(TODOS);
@@ -243,24 +254,25 @@ const Tarifario = () => {
   const [fMoneda, setFMoneda] = useState("MXN");
   const [nuevo, setNuevo] = useState(false);
   const [editando, setEditando] = useState(null);
+  const [eliminar, setEliminar] = useState(null);
 
   const filtrados = useMemo(() => {
     const q = busqueda.trim().toLowerCase();
-    return TARIFARIO.filter((t) => {
-      if (q && !`${t.codigo} ${t.servicio} ${t.variante}`.toLowerCase().includes(q)) return false;
+    return tarifas.filter((t) => {
+      if (q && !`${t.codigo} ${t.equipo} ${t.variante}`.toLowerCase().includes(q)) return false;
       if (fMagnitud !== TODOS && t.magnitud !== fMagnitud) return false;
       if (fModalidad !== TODOS && t.modalidad !== fModalidad) return false;
       if (fEstado !== TODOS && t.estado !== fEstado) return false;
       return true;
     });
-  }, [busqueda, fMagnitud, fModalidad, fEstado]);
+  }, [tarifas, busqueda, fMagnitud, fModalidad, fEstado]);
 
   const agrupado = useMemo(() => {
     const mapa = {};
     filtrados.forEach((t) => {
       if (!mapa[t.magnitud]) mapa[t.magnitud] = {};
-      if (!mapa[t.magnitud][t.servicio]) mapa[t.magnitud][t.servicio] = [];
-      mapa[t.magnitud][t.servicio].push(t);
+      if (!mapa[t.magnitud][t.equipo]) mapa[t.magnitud][t.equipo] = [];
+      mapa[t.magnitud][t.equipo].push(t);
     });
     return mapa;
   }, [filtrados]);
@@ -269,11 +281,11 @@ const Tarifario = () => {
     <div className="space-y-5">
       <PageHeader
         titulo="Tarifario"
-        descripcion="Catálogo de servicios organizado por magnitud, servicio y variante o alcance"
+        descripcion="Catálogo de equipos a calibrar, organizado por magnitud, equipo y variante o alcance"
         acciones={
           <Button data-testid="tarifario-new-service-button" onClick={() => setNuevo(true)}>
             <Plus className="mr-2 h-4 w-4" aria-hidden="true" />
-            Nuevo servicio
+            Nuevo equipo
           </Button>
         }
       />
@@ -329,7 +341,7 @@ const Tarifario = () => {
                   <Input
                     data-testid="tarifario-search-input"
                     className="pl-8"
-                    placeholder="Código o servicio…"
+                    placeholder="Código o equipo…"
                     value={busqueda}
                     onChange={(e) => setBusqueda(e.target.value)}
                   />
@@ -398,7 +410,7 @@ const Tarifario = () => {
             </div>
             <div className="flex items-center justify-between">
               <p className="num text-xs text-muted-foreground" data-testid="tarifario-count">
-                {filtrados.length} de {TARIFARIO.length} servicios
+                {filtrados.length} de {tarifas.length} equipos
               </p>
               <Button
                 variant="ghost"
@@ -422,24 +434,25 @@ const Tarifario = () => {
 
       {filtrados.length === 0 ? (
         <EmptyState
-          titulo="No hay servicios con estos filtros"
-          descripcion="Ajusta los filtros para ver el tarifario de demostración."
+          titulo="No hay equipos con estos filtros"
+          descripcion="Ajusta los filtros o agrega un nuevo equipo al tarifario."
         />
       ) : (
         <div className="space-y-4" data-testid="tarifario-groups">
-          {Object.entries(agrupado).map(([magnitud, servicios]) => (
+          {Object.entries(agrupado).map(([magnitud, equipos]) => (
             <Card key={magnitud}>
               <CardHeader className="flex-row items-center justify-between space-y-0 border-b border-border pb-3">
                 <CardTitle className="font-display text-base">Magnitud: {magnitud}</CardTitle>
                 <span className="num text-xs text-muted-foreground">
-                  {Object.values(servicios).flat().length} servicios
+                  {Object.values(equipos).flat().length} equipos
                 </span>
               </CardHeader>
               <CardContent className="p-0">
-                {Object.entries(servicios).map(([servicio, filas]) => (
-                  <div key={servicio} className="border-b border-border last:border-b-0">
-                    <p className="bg-slate-50 px-4 py-2 text-xs font-semibold uppercase tracking-wide text-slate-600">
-                      {servicio}
+                {Object.entries(equipos).map(([equipo, filas]) => (
+                  <div key={equipo} className="border-b border-border last:border-b-0">
+                    <p className="flex items-center gap-1.5 bg-slate-50 px-4 py-2 text-xs font-semibold uppercase tracking-wide text-slate-600">
+                      <Wrench className="h-3.5 w-3.5" aria-hidden="true" />
+                      {equipo}
                     </p>
                     <div className="qlm-table-wrap scrollbar-thin">
                       <Table>
@@ -464,7 +477,7 @@ const Tarifario = () => {
                           {filas.map((t) => (
                             <TableRow key={t.id} data-testid="tarifario-table-row" className="hover:bg-slate-50">
                               <TableCell className="font-mono text-xs font-medium">{t.codigo}</TableCell>
-                              <TableCell className="text-sm">{t.variante}</TableCell>
+                              <TableCell className="text-sm">{t.variante || "—"}</TableCell>
                               <TableCell className="text-sm">{t.modalidad}</TableCell>
                               <TableCell
                                 className={`num text-right font-mono text-sm ${
@@ -480,19 +493,33 @@ const Tarifario = () => {
                               >
                                 {formatMoneda(t.precioUSD, "USD", 0)}
                               </TableCell>
-                              <TableCell className="whitespace-nowrap text-sm">{t.tiempoEstimado}</TableCell>
-                              <TableCell className="whitespace-nowrap text-sm">{formatFecha(t.vigencia)}</TableCell>
+                              <TableCell className="whitespace-nowrap text-sm">{t.tiempoEstimado || "—"}</TableCell>
+                              <TableCell className="whitespace-nowrap text-sm">
+                                {t.vigencia ? formatFecha(t.vigencia) : "—"}
+                              </TableCell>
                               <TableCell><StatusBadge estado={t.estado} /></TableCell>
                               <TableCell className="text-right">
-                                <Button
-                                  size="sm"
-                                  variant="ghost"
-                                  data-testid={`tarifario-edit-rate-${t.id}`}
-                                  onClick={() => setEditando(t)}
-                                >
-                                  <Pencil className="mr-1 h-3.5 w-3.5" aria-hidden="true" />
-                                  Editar
-                                </Button>
+                                <div className="flex items-center justify-end gap-1">
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    data-testid={`tarifario-edit-rate-${t.id}`}
+                                    onClick={() => setEditando(t)}
+                                  >
+                                    <Pencil className="mr-1 h-3.5 w-3.5" aria-hidden="true" />
+                                    Editar
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+                                    data-testid={`tarifario-delete-rate-${t.id}`}
+                                    onClick={() => setEliminar(t)}
+                                    aria-label={`Eliminar ${t.equipo} ${t.variante}`}
+                                  >
+                                    <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
+                                  </Button>
+                                </div>
                               </TableCell>
                             </TableRow>
                           ))}
@@ -511,11 +538,11 @@ const Tarifario = () => {
         <TarifaFormSheet
           open={nuevo}
           onOpenChange={setNuevo}
-          onGuardar={() => {
+          onGuardar={(data) => {
+            agregarTarifa(data);
             setNuevo(false);
-            toast.info("Alta de servicio", {
-              description:
-                "Esta función se habilitará en la etapa de conexión con backend. No se guardó información.",
+            toast.success("Equipo agregado", {
+              description: `${data.equipo} se agregó al tarifario (solo durante esta sesión).`,
             });
           }}
         />
@@ -526,15 +553,46 @@ const Tarifario = () => {
           open={Boolean(editando)}
           onOpenChange={(v) => !v && setEditando(null)}
           tarifa={editando}
-          onGuardar={() => {
+          onGuardar={(data) => {
+            actualizarTarifa(editando.id, data);
             setEditando(null);
-            toast.info("Edición de tarifa", {
-              description:
-                "Esta función se habilitará en la etapa de conexión con backend. No se guardó información.",
+            toast.success("Cambios guardados", {
+              description: `${data.equipo} se actualizó en el tarifario (solo durante esta sesión).`,
             });
           }}
         />
       ) : null}
+
+      <AlertDialog open={Boolean(eliminar)} onOpenChange={(v) => !v && setEliminar(null)}>
+        <AlertDialogContent data-testid="tarifario-delete-dialog">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Eliminar equipo del tarifario</AlertDialogTitle>
+            <AlertDialogDescription>
+              {eliminar
+                ? `Se eliminará "${eliminar.equipo}${eliminar.variante ? ` · ${eliminar.variante}` : ""}" (${eliminar.codigo}). Esta acción solo afecta esta sesión.`
+                : ""}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel data-testid="tarifario-delete-cancel">Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              data-testid="tarifario-delete-confirm"
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => {
+                if (eliminar) {
+                  eliminarTarifa(eliminar.id);
+                  toast.success("Equipo eliminado", {
+                    description: `${eliminar.equipo} se eliminó del tarifario (solo durante esta sesión).`,
+                  });
+                }
+                setEliminar(null);
+              }}
+            >
+              Eliminar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

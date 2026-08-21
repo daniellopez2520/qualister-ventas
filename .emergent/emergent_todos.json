@@ -1,26 +1,22 @@
 [
   {
-    "content": "Fase 1: Tokens de diseño, layout (sidebar/topbar), rutas y login simulado",
+    "content": "Reescribir mock tarifario.js a base de equipos (con campo servicio=equipo para compat con Cotizaciones)",
     "status": "completed"
   },
   {
-    "content": "Fase 2: Datos mock centralizados en /src/mocks + componentes reutilizables",
+    "content": "Crear TarifarioContext (crear/editar/eliminar en memoria durante la sesión)",
     "status": "completed"
   },
   {
-    "content": "Fase 3: Dashboard, Prospectos (tabla/kanban + detalle), Clientes (+detalle)",
+    "content": "Reescribir Tarifario.js: columna/agrupación Equipo, edición y eliminación reales",
     "status": "completed"
   },
   {
-    "content": "Fase 3: Seguimientos (lista/calendario/timeline), Tarifario, Cotizaciones (tabla/wizard/detalle)",
+    "content": "Montar TarifarioProvider en App.js",
     "status": "completed"
   },
   {
-    "content": "Fase 4: Lint + revisión visual con screenshots (desktop y móvil)",
-    "status": "completed"
-  },
-  {
-    "content": "Fase 4: Testing E2E con testing_agent_v3 y corrección de bugs",
+    "content": "Verificar compilación y probar UI (crear/editar/eliminar)",
     "status": "completed"
   }
 ]
