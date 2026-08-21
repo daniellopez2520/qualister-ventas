@@ -1,0 +1,12 @@
+/* Estilos globales mínimos de la aplicación Qualister.
+   La mayor parte del estilo vive en index.css (tokens) y en clases Tailwind. */
+
+.qlm-shell {
+    min-height: 100vh;
+}
+
+/* Contenedor de tablas densas con scroll horizontal accesible */
+.qlm-table-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}

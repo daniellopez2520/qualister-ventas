@@ -1,0 +1,26 @@
+[
+  {
+    "content": "Fase 1: Tokens de diseño, layout (sidebar/topbar), rutas y login simulado",
+    "status": "completed"
+  },
+  {
+    "content": "Fase 2: Datos mock centralizados en /src/mocks + componentes reutilizables",
+    "status": "completed"
+  },
+  {
+    "content": "Fase 3: Dashboard, Prospectos (tabla/kanban + detalle), Clientes (+detalle)",
+    "status": "completed"
+  },
+  {
+    "content": "Fase 3: Seguimientos (lista/calendario/timeline), Tarifario, Cotizaciones (tabla/wizard/detalle)",
+    "status": "completed"
+  },
+  {
+    "content": "Fase 4: Lint + revisión visual con screenshots (desktop y móvil)",
+    "status": "completed"
+  },
+  {
+    "content": "Fase 4: Testing E2E con testing_agent_v3 y corrección de bugs",
+    "status": "completed"
+  }
+]

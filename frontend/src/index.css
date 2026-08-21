@@ -1,0 +1,111 @@
+@import url("https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+    :root {
+        --background: 210 40% 98%;
+        --foreground: 222 47% 11%;
+        --card: 0 0% 100%;
+        --card-foreground: 222 47% 11%;
+        --popover: 0 0% 100%;
+        --popover-foreground: 222 47% 11%;
+        --primary: 221 83% 45%;
+        --primary-foreground: 210 40% 98%;
+        --secondary: 210 40% 96%;
+        --secondary-foreground: 222 47% 11%;
+        --muted: 210 40% 96%;
+        --muted-foreground: 215 16% 40%;
+        --accent: 210 40% 96%;
+        --accent-foreground: 222 47% 11%;
+        --destructive: 0 84% 45%;
+        --destructive-foreground: 210 40% 98%;
+        --border: 214 32% 91%;
+        --input: 214 32% 91%;
+        --ring: 221 83% 45%;
+        --radius: 0.6rem;
+
+        --sidebar: 210 28% 11%;
+        --sidebar-foreground: 210 40% 96%;
+        --sidebar-muted: 210 22% 18%;
+        --sidebar-muted-foreground: 215 20% 78%;
+        --sidebar-border: 210 22% 20%;
+        --sidebar-ring: 221 83% 60%;
+
+        --state-success: 142 71% 32%;
+        --state-warning: 32 95% 40%;
+        --state-danger: 0 84% 45%;
+        --state-info: 221 83% 45%;
+
+        --chart-1: 221 83% 45%;
+        --chart-2: 199 89% 40%;
+        --chart-3: 142 71% 32%;
+        --chart-4: 32 95% 40%;
+        --chart-5: 0 84% 45%;
+    }
+}
+
+@layer base {
+    * {
+        @apply border-border;
+    }
+    html,
+    body {
+        margin: 0;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+    }
+    body {
+        @apply bg-background text-foreground;
+        font-family: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+    }
+    h1,
+    h2,
+    h3,
+    h4,
+    .font-display {
+        font-family: "Space Grotesk", "Inter", system-ui, sans-serif;
+    }
+    .font-mono,
+    code,
+    .tabular {
+        font-family: "IBM Plex Mono", ui-monospace, monospace;
+    }
+}
+
+@layer utilities {
+    .num {
+        font-variant-numeric: tabular-nums;
+    }
+    .grid-texture {
+        background-image:
+            linear-gradient(
+                to right,
+                rgba(148, 163, 184, 0.12) 1px,
+                transparent 1px
+            ),
+            linear-gradient(
+                to bottom,
+                rgba(148, 163, 184, 0.12) 1px,
+                transparent 1px
+            );
+        background-size: 28px 28px;
+    }
+    .scrollbar-thin::-webkit-scrollbar {
+        height: 8px;
+        width: 8px;
+    }
+    .scrollbar-thin::-webkit-scrollbar-thumb {
+        background: rgba(100, 116, 139, 0.35);
+        border-radius: 9999px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+    }
+}
