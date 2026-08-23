@@ -19,6 +19,12 @@ const MAGNITUDES_INFO = [
   { icon: Zap, label: "Eléctrica" },
 ];
 
+// Credenciales del perfil de Ventas (prototipo, sin backend).
+const CREDENCIAL_DEMO = {
+  correo: "ventas@qualister.mx",
+  password: "ventas2025",
+};
+
 const Login = () => {
   const navigate = useNavigate();
   const { iniciarSesion } = useSesion();
@@ -31,13 +37,20 @@ const Login = () => {
   const enviar = (e) => {
     e.preventDefault();
     if (!correo.trim() || !password.trim()) {
-      setError("Captura tu correo y contraseña para continuar (validación visual).");
+      setError("Captura tu correo y contraseña para continuar.");
+      return;
+    }
+    if (
+      correo.trim().toLowerCase() !== CREDENCIAL_DEMO.correo ||
+      password !== CREDENCIAL_DEMO.password
+    ) {
+      setError("Credenciales incorrectas. Usa el usuario y contraseña del perfil de Ventas.");
       return;
     }
     setError("");
     iniciarSesion();
     toast.success("Acceso simulado", {
-      description: "No se validaron credenciales reales.",
+      description: "Sesión iniciada con el perfil de Ventas.",
     });
     navigate("/ventas/dashboard", { replace: true });
   };
@@ -59,9 +72,6 @@ const Login = () => {
             <h1 className="font-display text-2xl font-semibold tracking-tight text-slate-900">
               Qualister - Laboratorio de Metrología
             </h1>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Laboratorio de calibración y metrología: temperatura, humedad, RF y magnitudes eléctricas
-            </p>
           </div>
 
           <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
@@ -145,8 +155,9 @@ const Login = () => {
             <div className="mt-5 flex items-start gap-2 rounded-md border border-amber-200 bg-amber-50 px-3 py-2">
               <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-amber-700" aria-hidden="true" />
               <p className="text-xs text-amber-800" data-testid="login-prototype-hint">
-                <strong>Prototipo visual.</strong> El acceso es simulado: no se validan
-                credenciales ni existe autenticación real.
+                <strong>Perfil de Ventas.</strong> Usuario:{" "}
+                <strong>ventas@qualister.mx</strong> · Contraseña: <strong>ventas2025</strong>.
+                Acceso simulado, sin autenticación real.
               </p>
             </div>
           </div>
@@ -171,8 +182,8 @@ const Login = () => {
             Gestión comercial trazable para tu laboratorio
           </h2>
           <p className="mt-3 max-w-sm text-sm text-slate-300">
-            Prospectos, clientes, seguimientos, tarifario y cotizaciones en un solo módulo de
-            Ventas.
+            Laboratorio de calibración y metrología: temperatura, humedad, RF y magnitudes
+            eléctricas.
           </p>
         </div>
 
