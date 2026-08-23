@@ -59,7 +59,9 @@ const Login = () => {
             <h1 className="font-display text-2xl font-semibold tracking-tight text-slate-900">
               Qualister - Laboratorio de Metrología
             </h1>
-            <p className="mt-1 text-sm text-muted-foreground">Sistema de Gestión Comercial</p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Laboratorio de calibración y metrología: temperatura, humedad, RF y magnitudes eléctricas
+            </p>
           </div>
 
           <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
