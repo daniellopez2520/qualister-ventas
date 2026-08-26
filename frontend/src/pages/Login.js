@@ -70,7 +70,8 @@ const Login = () => {
               />
             </div>
             <h1 className="font-display text-2xl font-semibold tracking-tight text-slate-900">
-              Qualister - Laboratorio de Metrología
+                      Qualister
+              Laboratorio de Metrología
             </h1>
           </div>
 
@@ -157,7 +158,6 @@ const Login = () => {
               <p className="text-xs text-amber-800" data-testid="login-prototype-hint">
                 <strong>Perfil de Ventas.</strong> Usuario:{" "}
                 <strong>ventas@qualister.mx</strong> · Contraseña: <strong>ventas2025</strong>.
-                Acceso simulado, sin autenticación real.
               </p>
             </div>
           </div>

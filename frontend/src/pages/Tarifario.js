@@ -67,6 +67,17 @@ const TarifaFormSheet = ({ open, onOpenChange, tarifa, onGuardar }) => {
   const [errores, setErrores] = useState({});
   const set = (k, v) => setForm((f) => ({ ...f, [k]: v }));
 
+  // Fix bug de Radix: al cerrarse un Select dentro de un Sheet, a veces deja el
+  // <body> con pointer-events:none y bloquea los clics del resto del formulario.
+  const restaurarPointerEvents = (abierto) => {
+    if (abierto) return;
+    setTimeout(() => {
+      if (document.body.style.pointerEvents === "none") {
+        document.body.style.pointerEvents = "";
+      }
+    }, 0);
+  };
+
   const validar = () => {
     const e = {};
     if (!form.codigo.trim()) e.codigo = "Requerido";
@@ -114,7 +125,7 @@ const TarifaFormSheet = ({ open, onOpenChange, tarifa, onGuardar }) => {
             </div>
             <div className="space-y-1.5">
               <Label>Magnitud</Label>
-              <Select value={form.magnitud} onValueChange={(v) => set("magnitud", v)}>
+              <Select value={form.magnitud} onValueChange={(v) => set("magnitud", v)} onOpenChange={restaurarPointerEvents}>
                 <SelectTrigger data-testid="tarifa-form-magnitud" aria-invalid={Boolean(errores.magnitud)}>
                   <SelectValue placeholder="Selecciona magnitud" />
                 </SelectTrigger>
@@ -157,7 +168,7 @@ const TarifaFormSheet = ({ open, onOpenChange, tarifa, onGuardar }) => {
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <Label>Modalidad</Label>
-                <Select value={form.modalidad} onValueChange={(v) => set("modalidad", v)}>
+                <Select value={form.modalidad} onValueChange={(v) => set("modalidad", v)} onOpenChange={restaurarPointerEvents}>
                   <SelectTrigger data-testid="tarifa-form-modalidad">
                     <SelectValue />
                   </SelectTrigger>
@@ -172,7 +183,7 @@ const TarifaFormSheet = ({ open, onOpenChange, tarifa, onGuardar }) => {
               </div>
               <div className="space-y-1.5">
                 <Label>Estado</Label>
-                <Select value={form.estado} onValueChange={(v) => set("estado", v)}>
+                <Select value={form.estado} onValueChange={(v) => set("estado", v)} onOpenChange={restaurarPointerEvents}>
                   <SelectTrigger data-testid="tarifa-form-estado">
                     <SelectValue />
                   </SelectTrigger>
