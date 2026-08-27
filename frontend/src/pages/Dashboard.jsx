@@ -55,7 +55,7 @@ const Dashboard = () => {
   return (
     <div className="space-y-5">
       <PageHeader
-        titulo="Dashboard de Ventas"
+        titulo="Dashboard"
         descripcion="Resumen comercial del módulo de Ventas · Usuario de Ventas"
         acciones={
           <>
@@ -85,8 +85,6 @@ const Dashboard = () => {
           </>
         }
       />
-
-      <DemoNotice texto="Todos los indicadores provienen de datos de demostración almacenados en archivos mock. No representan información real de operación." />
 
       <section
         data-testid="dashboard-kpis"
