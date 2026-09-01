@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Sheet,
   SheetContent,
@@ -46,9 +46,21 @@ const VACIO = {
   notas: "",
 };
 
+const prepararFormulario = (inicial) => ({
+  ...VACIO,
+  ...(inicial || {}),
+  magnitudes: [...(inicial?.magnitudes || [])],
+  servicios: [...(inicial?.servicios || [])],
+});
+
 export const ProspectoFormSheet = ({ open, onOpenChange, onGuardar, inicial }) => {
-  const [form, setForm] = useState(inicial ? { ...VACIO, ...inicial } : VACIO);
+  const [form, setForm] = useState(() => prepararFormulario(inicial));
   const esEdicion = Boolean(inicial);
+  useEffect(() => {
+    if (open) {
+      setForm(prepararFormulario(inicial));
+    }
+  }, [open, inicial]);
 
   const set = (campo, valor) => setForm((f) => ({ ...f, [campo]: valor }));
 
@@ -73,16 +85,24 @@ export const ProspectoFormSheet = ({ open, onOpenChange, onGuardar, inicial }) =
       return;
     }
     onGuardar(form);
-    setForm(VACIO);
+    setForm(prepararFormulario());
   };
 
   const cancelar = () => {
-    setForm(inicial ? { ...VACIO, ...inicial } : VACIO);
+    setForm(prepararFormulario(inicial));
     onOpenChange(false);
   };
 
+  const cambiarApertura = (abierto) => {
+    if (!abierto) {
+      setForm(prepararFormulario(inicial));
+    }
+
+    onOpenChange(abierto);
+  };
+
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
+    <Sheet open={open} onOpenChange={cambiarApertura}>
       <SheetContent
         side="right"
         data-testid="prospecto-form-sheet"
@@ -93,8 +113,9 @@ export const ProspectoFormSheet = ({ open, onOpenChange, onGuardar, inicial }) =
             {esEdicion ? "Editar prospecto" : "Nuevo prospecto"}
           </SheetTitle>
           <SheetDescription>
-            Formulario visual. Los datos se mantienen sólo en el estado temporal del navegador y se
-            reinician al recargar la página.
+            {esEdicion
+              ? "Actualiza la informacion comercial del prospecto."
+              : "Captura la informacion comerciial del nuevo prospecto."}
           </SheetDescription>
         </SheetHeader>
 

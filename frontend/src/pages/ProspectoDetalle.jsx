@@ -42,8 +42,10 @@ import { FilePickerField } from "@/components/common/FilePickerField";
 import { ProspectoFormSheet } from "@/components/ventas/ProspectoFormSheet";
 import { SeguimientoFormSheet } from "@/components/ventas/SeguimientoFormSheet";
 import { formatFecha, formatMoneda } from "@/lib/format";
-import { PROSPECTOS, SEGUIMIENTOS, COTIZACIONES, calcularTotales } from "@/mocks";
+import { SEGUIMIENTOS, COTIZACIONES, calcularTotales } from "@/mocks";
 import { toast } from "sonner";
+import { useProspectos } from "@/context/ProspectosContext";
+
 
 const Campo = ({ label, valor, icon: Icon }) => (
   <div className="min-w-0">
@@ -58,9 +60,8 @@ const Campo = ({ label, valor, icon: Icon }) => (
 const ProspectoDetalle = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const base = PROSPECTOS.find((p) => p.id === id);
-
-  const [prospecto, setProspecto] = useState(base);
+  const { obtenerProspecto, actualizarProspecto } = useProspectos();
+  const prospecto = obtenerProspecto(id);
   const [seguimientos, setSeguimientos] = useState(
     SEGUIMIENTOS.filter((s) => s.relacionId === id),
   );
@@ -76,7 +77,7 @@ const ProspectoDetalle = () => {
     [id],
   );
 
-  if (!base) {
+  if (!prospecto) {
     return (
       <div className="space-y-4">
         <EmptyState
@@ -427,10 +428,11 @@ const ProspectoDetalle = () => {
         onOpenChange={setEditar}
         inicial={prospecto}
         onGuardar={(form) => {
-          setProspecto((p) => ({ ...p, ...form }));
+          actualizarProspecto(prospecto.id, form);
           setEditar(false);
-          toast.success("Cambios aplicados temporalmente", {
-            description: "No se guardaron en ninguna base de datos.",
+
+          toast.success("Prospecto actualizado", {
+            description: "Lis cambios se guardaron temporalmente en este navegadoratos",
           });
         }}
       />
@@ -509,7 +511,9 @@ const ProspectoDetalle = () => {
             <Button
               data-testid="prospecto-convertir-confirm"
               onClick={() => {
-                setProspecto((p) => ({ ...p, estado: "Convertido en cliente" }));
+                actualizarProspecto(prospecto.id, { 
+                  estado: "Convertido en cliente",
+                });
                 setModalConvertir(false);
                 toast.success("Estado actualizado temporalmente");
               }}
@@ -536,7 +540,9 @@ const ProspectoDetalle = () => {
               variant="destructive"
               data-testid="prospecto-no-calificado-confirm"
               onClick={() => {
-                setProspecto((p) => ({ ...p, estado: "No calificado" }));
+                actualizarProspecto(prospecto.id, { 
+                  estado: "No calificado",
+                 });
                 setModalNoCalificado(false);
                 toast.success("Estado actualizado temporalmente");
               }}

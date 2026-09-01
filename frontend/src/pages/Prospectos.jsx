@@ -43,16 +43,16 @@ import { StatusBadge } from "@/components/common/StatusBadge";
 import { EmptyState } from "@/components/common/EmptyState";
 import { ProspectoFormSheet } from "@/components/ventas/ProspectoFormSheet";
 import { formatFecha, hoyDemo } from "@/lib/format";
-import { PROSPECTOS, ESTADOS_PROSPECTO, MAGNITUDES } from "@/mocks";
+import { ESTADOS_PROSPECTO, MAGNITUDES } from "@/mocks";
 import { toast } from "sonner";
+import { useProspectos } from "@/context/ProspectosContext";
 
 const TODOS = "__todos__";
 
 const Prospectos = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  // Estado temporal en memoria (sin persistencia).
-  const [lista, setLista] = useState(PROSPECTOS);
+  const { prospectos: lista, crearProspecto } = useProspectos();
   const [vista, setVista] = useState("tabla");
   const [busqueda, setBusqueda] = useState("");
   const [fEstado, setFEstado] = useState(TODOS);
@@ -103,36 +103,12 @@ const Prospectos = () => {
   };
 
   const guardarProspecto = (form) => {
-    const nuevo = {
-      ...form,
-      id: `P-TMP-${Date.now()}`,
-      folio: `PRO-2025-T${lista.length + 1}`,
-      estado: "Nuevo",
-      vendedor: "Usuario de Ventas",
-      fechaCreacion: hoyDemo,
-      contactos: [
-        {
-          nombre: form.contacto,
-          puesto: form.puesto,
-          correo: form.correo,
-          telefono: form.telefono,
-          principal: true,
-        },
-      ],
-      documentos: [],
-      historial: [
-        {
-          fecha: hoyDemo,
-          evento: "Prospecto creado (temporal)",
-          detalle: "Alta desde el prototipo visual",
-          usuario: "Usuario de Ventas",
-        },
-      ],
-    };
-    setLista((prev) => [nuevo, ...prev]);
+    const nuevo = crearProspecto(form);
+
     setAbrirForm(false);
-    toast.success("Prospecto agregado temporalmente", {
-      description: "No se guardó en ninguna base de datos. Se pierde al recargar la página.",
+
+    toast.success("Prospecto agregado", {
+      description: `${nuevo.folio} se guardó temporalmente en este navegador.`,
     });
   };
 
@@ -462,4 +438,4 @@ const Prospectos = () => {
   );
 };
 
-export default Prospectos;
+  export default Prospectos;
