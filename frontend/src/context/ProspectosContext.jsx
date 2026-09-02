@@ -77,12 +77,62 @@ export const ProspectosProvider = ({ children }) => {
   };
 
   const actualizarProspecto = (id, cambios) => {
-    setProspectos((anteriores) =>
-      anteriores.map((prospecto) =>
-        prospecto.id === id
-          ? { ...prospecto, ...cambios }
-          : prospecto,
-      ),
+    setProspectos((actuales) =>
+      actuales.map((prospecto) => {
+        if (prospecto.id !== id) {
+          return prospecto;
+        }
+
+        const actualizado = {
+          ...prospecto,
+          ...cambios,
+        };
+
+        const modificaContacto = [
+          "contacto",
+          "puesto",
+          "correo",
+          "telefono",
+        ].some((campo) =>
+          Object.prototype.hasOwnProperty.call(cambios, campo),
+        );
+
+        if (!modificaContacto) {
+          return actualizado;
+        }
+
+        const contactos = prospecto.contactos || [];
+        const indicePrincipal = contactos.findIndex(
+          (contacto) => contacto.principal,
+        );
+
+        const contactoAnterior =
+          indicePrincipal >= 0 ? contactos[indicePrincipal] : {};
+
+        const contactoPrincipal = {
+          ...contactoAnterior,
+          id:
+            contactoAnterior.id ||
+            `CONT-${crypto.randomUUID()}`,
+          nombre: actualizado.contacto || "",
+          puesto: actualizado.puesto || "",
+          correo: actualizado.correo || "",
+          telefono: actualizado.telefono || "",
+          principal: true,
+        };
+
+        return {
+          ...actualizado,
+          contactos:
+            indicePrincipal >= 0
+              ? contactos.map((contacto, indice) =>
+                indice === indicePrincipal
+                  ? contactoPrincipal
+                  : contacto,
+              )
+              : [contactoPrincipal, ...contactos],
+        };
+      }),
     );
   };
 
@@ -99,6 +149,7 @@ export const ProspectosProvider = ({ children }) => {
     </ProspectosContext.Provider>
   );
 };
+
 
 export const useProspectos = () => {
   const contexto = useContext(ProspectosContext);

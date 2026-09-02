@@ -3,9 +3,10 @@ import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { Topbar } from "@/components/layout/Topbar";
 import { useSesion } from "@/context/SesionContext";
-import { PROSPECTOS, CLIENTES, COTIZACIONES } from "@/mocks";
+import { CLIENTES, COTIZACIONES } from "@/mocks";
+import { useProspectos } from "@/context/ProspectosContext";
 
-const resolverPantalla = (pathname) => {
+const resolverPantalla = (pathname, prospectos) => {
   const base = [{ label: "Ventas" }];
   const partes = pathname.split("/").filter(Boolean); // ["ventas", seccion, id?]
   const seccion = partes[1] || "";
@@ -17,7 +18,7 @@ const resolverPantalla = (pathname) => {
 
   if (seccion === "prospectos") {
     if (id) {
-      const p = PROSPECTOS.find((x) => x.id === id);
+      const p = prospectos.find((x) => x.id === id);
       return {
         titulo: `Prospecto ${p ? p.folio : id}`,
         breadcrumbs: [
@@ -83,6 +84,7 @@ const resolverPantalla = (pathname) => {
 
 const VentasLayout = () => {
   const { autenticado } = useSesion();
+  const { prospectos } = useProspectos();
   const location = useLocation();
   const [colapsado, setColapsado] = useState(false);
 
@@ -90,7 +92,10 @@ const VentasLayout = () => {
     return <Navigate to="/login" replace />;
   }
 
-  const { titulo, breadcrumbs } = resolverPantalla(location.pathname);
+  const { titulo, breadcrumbs } = resolverPantalla(
+    location.pathname,
+    prospectos
+  );
 
   return (
     <div className="qlm-shell flex bg-background">

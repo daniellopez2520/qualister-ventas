@@ -53,6 +53,17 @@ const prepararFormulario = (inicial) => ({
   servicios: [...(inicial?.servicios || [])],
 });
 
+const obtenerServiciosDisponibles = (magnitudes = []) =>
+  Array.from(
+    new Set(
+      magnitudes.flatMap((magnitud) =>
+        (SERVICIOS_POR_MAGNITUD[magnitud] || []).map(
+          (servicio) => servicio.servicio,
+        ),
+      ),
+    ),
+  );
+
 export const ProspectoFormSheet = ({ open, onOpenChange, onGuardar, inicial }) => {
   const [form, setForm] = useState(() => prepararFormulario(inicial));
   const esEdicion = Boolean(inicial);
@@ -64,17 +75,36 @@ export const ProspectoFormSheet = ({ open, onOpenChange, onGuardar, inicial }) =
 
   const set = (campo, valor) => setForm((f) => ({ ...f, [campo]: valor }));
 
-  const toggleLista = (campo, valor) =>
-    setForm((f) => ({
-      ...f,
-      [campo]: f[campo].includes(valor)
-        ? f[campo].filter((v) => v !== valor)
-        : [...f[campo], valor],
-    }));
+  const cambiarMagnitud = (magnitud) => {
+    setForm((actual) => {
+      const magnitudes = actual.magnitudes.includes(magnitud)
+        ? actual.magnitudes.filter((item) => item !== magnitud)
+        : [...actual.magnitudes, magnitud];
 
-  const serviciosDisponibles = form.magnitudes.flatMap((m) =>
-    (SERVICIOS_POR_MAGNITUD[m] || []).map((s) => s.servicio),
-  );
+      const serviciosPermitidos =
+        obtenerServiciosDisponibles(magnitudes);
+
+      return {
+        ...actual,
+        magnitudes,
+        servicios: actual.servicios.filter((servicio) =>
+          serviciosPermitidos.includes(servicio),
+        ),
+      };
+    });
+  };
+
+  const cambiarServicio = (servicio) => {
+    setForm((actual) => ({
+      ...actual,
+      servicios: actual.servicios.includes(servicio)
+        ? actual.servicios.filter((item) => item !== servicio)
+        : [...actual.servicios, servicio],
+    }));
+  };
+
+  const serviciosDisponibles =
+    obtenerServiciosDisponibles(form.magnitudes);
 
   const guardar = (e) => {
     e.preventDefault();
@@ -256,7 +286,7 @@ export const ProspectoFormSheet = ({ open, onOpenChange, onGuardar, inicial }) =
                       <Checkbox
                         data-testid={`prospecto-form-magnitud-${m}`}
                         checked={form.magnitudes.includes(m)}
-                        onCheckedChange={() => toggleLista("magnitudes", m)}
+                        onCheckedChange={() => cambiarMagnitud(m)}
                       />
                       {m}
                     </label>
@@ -279,7 +309,7 @@ export const ProspectoFormSheet = ({ open, onOpenChange, onGuardar, inicial }) =
                       >
                         <Checkbox
                           checked={form.servicios.includes(s)}
-                          onCheckedChange={() => toggleLista("servicios", s)}
+                          onCheckedChange={() => cambiarServicio(s)}
                         />
                         {s}
                       </label>
