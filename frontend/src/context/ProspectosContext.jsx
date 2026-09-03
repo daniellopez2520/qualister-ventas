@@ -30,6 +30,14 @@ const generarFolio = (prospectos) => {
   return `${prefijo}${String(siguiente).padStart(4, "0")}`;
 };
 
+const crearEventoHistorial = (evento, detalle) => ({
+  id: `H-${crypto.randomUUID()}`,
+  fecha: new Date().toISOString(),
+  usuario: "Usuario de Ventas",
+  evento,
+  detalle,
+});
+
 export const ProspectosProvider = ({ children }) => {
   const [prospectos, setProspectos] = useState(cargarProspectos);
 
@@ -62,12 +70,10 @@ export const ProspectosProvider = ({ children }) => {
       ],
       documentos: [],
       historial: [
-        {
-          fecha: fechaActual,
-          evento: "Prospecto creado",
-          detalle: "Alta desde el módulo de Ventas",
-          usuario: "Usuario de Ventas",
-        },
+        crearEventoHistorial(
+          "Prospecto creado",
+          "Se registró el prospecto en el sistema.",
+        ),
       ],
     };
 
@@ -76,80 +82,100 @@ export const ProspectosProvider = ({ children }) => {
     return nuevo;
   };
 
-  const actualizarProspecto = (id, cambios) => {
-    setProspectos((actuales) =>
-      actuales.map((prospecto) => {
-        if (prospecto.id !== id) {
-          return prospecto;
+  const actualizarProspecto = (
+    id,
+    cambios,
+    eventoHistorial = null,
+  ) => {
+  setProspectos((actuales) =>
+    actuales.map((prospecto) => {
+      if (prospecto.id !== id) {
+        return prospecto;
+      }
+
+      const actualizado = {
+        ...prospecto,
+        ...cambios,
+      };
+
+      const agregarEvento = (registro) => {
+        if (!eventoHistorial) {
+          return registro;
         }
-
-        const actualizado = {
-          ...prospecto,
-          ...cambios,
-        };
-
-        const modificaContacto = [
-          "contacto",
-          "puesto",
-          "correo",
-          "telefono",
-        ].some((campo) =>
-          Object.prototype.hasOwnProperty.call(cambios, campo),
-        );
-
-        if (!modificaContacto) {
-          return actualizado;
-        }
-
-        const contactos = prospecto.contactos || [];
-        const indicePrincipal = contactos.findIndex(
-          (contacto) => contacto.principal,
-        );
-
-        const contactoAnterior =
-          indicePrincipal >= 0 ? contactos[indicePrincipal] : {};
-
-        const contactoPrincipal = {
-          ...contactoAnterior,
-          id:
-            contactoAnterior.id ||
-            `CONT-${crypto.randomUUID()}`,
-          nombre: actualizado.contacto || "",
-          puesto: actualizado.puesto || "",
-          correo: actualizado.correo || "",
-          telefono: actualizado.telefono || "",
-          principal: true,
-        };
 
         return {
-          ...actualizado,
-          contactos:
-            indicePrincipal >= 0
-              ? contactos.map((contacto, indice) =>
-                indice === indicePrincipal
-                  ? contactoPrincipal
-                  : contacto,
-              )
-              : [contactoPrincipal, ...contactos],
+          ...registro,
+          historial: [
+            crearEventoHistorial(
+              eventoHistorial.evento,
+              eventoHistorial.detalle,
+            ),
+            ...(registro.historial || []),
+          ],
         };
-      }),
-    );
-  };
+      };
 
-  return (
-    <ProspectosContext.Provider
-      value={{
-        prospectos,
-        obtenerProspecto,
-        crearProspecto,
-        actualizarProspecto,
-      }}
-    >
-      {children}
-    </ProspectosContext.Provider>
+      const modificaContacto = [
+        "contacto",
+        "puesto",
+        "correo",
+        "telefono",
+      ].some((campo) =>
+        Object.prototype.hasOwnProperty.call(cambios, campo),
+      );
+
+      if (!modificaContacto) {
+        return agregarEvento(actualizado);
+      }
+
+      const contactos = prospecto.contactos || [];
+      const indicePrincipal = contactos.findIndex(
+        (contacto) => contacto.principal,
+      );
+
+      const contactoAnterior =
+        indicePrincipal >= 0 ? contactos[indicePrincipal] : {};
+
+      const contactoPrincipal = {
+        ...contactoAnterior,
+        id:
+          contactoAnterior.id ||
+          `CONT-${crypto.randomUUID()}`,
+        nombre: actualizado.contacto || "",
+        puesto: actualizado.puesto || "",
+        correo: actualizado.correo || "",
+        telefono: actualizado.telefono || "",
+        principal: true,
+      };
+
+      return agregarEvento({
+        ...actualizado,
+        contactos:
+          indicePrincipal >= 0
+            ? contactos.map((contacto, indice) =>
+              indice === indicePrincipal
+                ? contactoPrincipal
+                : contacto,
+            )
+            : [contactoPrincipal, ...contactos],
+      });
+    }),
   );
 };
 
+return (
+  <ProspectosContext.Provider
+    value={{
+      prospectos,
+      obtenerProspecto,
+      crearProspecto,
+      actualizarProspecto,
+    }}
+  >
+    {children}
+  </ProspectosContext.Provider>
+);
+};
 
 export const useProspectos = () => {
   const contexto = useContext(ProspectosContext);

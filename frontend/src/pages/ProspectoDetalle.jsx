@@ -428,7 +428,10 @@ const ProspectoDetalle = () => {
         onOpenChange={setEditar}
         inicial={prospecto}
         onGuardar={(form) => {
-          actualizarProspecto(prospecto.id, form);
+          actualizarProspecto(prospecto.id, form, {
+            evento: "Informacion actualizada",
+            detalle: "Se modificaron los datos generales del prospecto.",
+          });
           setEditar(false);
 
           toast.success("Prospecto actualizado", {
@@ -511,9 +514,16 @@ const ProspectoDetalle = () => {
             <Button
               data-testid="prospecto-convertir-confirm"
               onClick={() => {
-                actualizarProspecto(prospecto.id, { 
+                actualizarProspecto(
+                  prospecto.id,
+                  { 
                   estado: "Convertido en cliente",
-                });
+                  },
+                  {
+                    evento: "Prospecto convertido",
+                    detalle: "El prospecto fue marcado como cliente.",
+                  },
+                );
                 setModalConvertir(false);
                 toast.success("Estado actualizado temporalmente");
               }}
@@ -540,9 +550,16 @@ const ProspectoDetalle = () => {
               variant="destructive"
               data-testid="prospecto-no-calificado-confirm"
               onClick={() => {
-                actualizarProspecto(prospecto.id, { 
-                  estado: "No calificado",
-                 });
+                actualizarProspecto(
+                  prospecto.id,
+                  { 
+                    estado: "No calificado",
+                  },
+                  {
+                    evento: "Prospecto no calificado",
+                    detalle: "El prospecto fue marcado como no calificado.",
+                  },
+                );
                 setModalNoCalificado(false);
                 toast.success("Estado actualizado temporalmente");
               }}
