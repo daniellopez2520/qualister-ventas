@@ -37,7 +37,6 @@ import { PageHeader } from "@/components/common/PageHeader";
 import { DemoNotice, DemoTag } from "@/components/common/DemoNotice";
 import { StatusBadge } from "@/components/common/StatusBadge";
 import { EmptyState } from "@/components/common/EmptyState";
-import { FutureFeatureDialog } from "@/components/common/FutureFeatureDialog";
 import { FilePickerField } from "@/components/common/FilePickerField";
 import { ProspectoFormSheet } from "@/components/ventas/ProspectoFormSheet";
 import { SeguimientoFormSheet } from "@/components/ventas/SeguimientoFormSheet";
@@ -45,6 +44,7 @@ import { formatFecha, formatMoneda } from "@/lib/format";
 import { SEGUIMIENTOS, COTIZACIONES, calcularTotales } from "@/mocks";
 import { toast } from "sonner";
 import { useProspectos } from "@/context/ProspectosContext";
+import { generarFormatoAltaExcel } from "@/services/formatoAltaExcel";
 
 
 const Campo = ({ label, valor, icon: Icon }) => (
@@ -67,7 +67,7 @@ const ProspectoDetalle = () => {
   );
   const [editar, setEditar] = useState(false);
   const [nuevoSeguimiento, setNuevoSeguimiento] = useState(false);
-  const [modalExcel, setModalExcel] = useState(false);
+  const [generandoExcel, setGenerandoExcel] = useState(false);
   const [modalCarga, setModalCarga] = useState(false);
   const [modalConvertir, setModalConvertir] = useState(false);
   const [modalNoCalificado, setModalNoCalificado] = useState(false);
@@ -76,6 +76,31 @@ const ProspectoDetalle = () => {
     () => COTIZACIONES.filter((c) => c.relacionId === id),
     [id],
   );
+
+  const descargarFormatoAlta = async () => {
+    if (generandoExcel) {
+      return;
+    }
+
+    setGenerandoExcel(true);
+    try {
+      await generarFormatoAltaExcel(prospecto);
+      toast.success("Formato generado",{
+        description: "El archivo de alta de cliente se descargo correctamente.",
+      });
+    } catch (error) {
+      console.error("Error al generar el formato de alta:", error);
+
+      toast.error("No se pudo generar el formato", {
+        description:
+        error instanceof Error
+          ? error.message
+          :"Ocurrio un error inesperado.",
+      });
+    } finally {
+      setGenerandoExcel(false);
+    }
+  };
 
   if (!prospecto) {
     return (
@@ -127,9 +152,15 @@ const ProspectoDetalle = () => {
           <FileText className="mr-2 h-4 w-4" aria-hidden="true" />
           Crear cotización
         </Button>
-        <Button variant="outline" size="sm" data-testid="prospecto-action-excel" onClick={() => setModalExcel(true)}>
-          <FileSpreadsheet className="mr-2 h-4 w-4" aria-hidden="true" />
-          Generar formato Excel
+        <Button 
+          variant="outline" 
+          size="sm" 
+          data-testid="prospecto-action-excel" 
+          onClick={descargarFormatoAlta}
+          disabled={generandoExcel}
+          >          
+            <FileSpreadsheet className="mr-2 h-4 w-4" aria-hidden="true" />
+            {generandoExcel ? "Generando..." : "Generar formato Excel"}
         </Button>
         <Button variant="outline" size="sm" data-testid="prospecto-action-cargar" onClick={() => setModalCarga(true)}>
           <Upload className="mr-2 h-4 w-4" aria-hidden="true" />
@@ -308,9 +339,14 @@ const ProspectoDetalle = () => {
             <CardHeader className="flex-row items-center justify-between space-y-0 pb-3">
               <CardTitle className="font-display text-base">Documentos</CardTitle>
               <div className="flex gap-2">
-                <Button size="sm" variant="outline" onClick={() => setModalExcel(true)}>
+                <Button 
+                  size="sm" 
+                  variant="outline" 
+                  onClick={descargarFormatoAlta}
+                  disabled={generandoExcel}
+                >
                   <FileSpreadsheet className="mr-2 h-4 w-4" aria-hidden="true" />
-                  Generar formato Excel
+                  {generandoExcel ? "Generando..." : "Generar formato Excel"}
                 </Button>
                 <Button size="sm" variant="outline" onClick={() => setModalCarga(true)}>
                   <Upload className="mr-2 h-4 w-4" aria-hidden="true" />
@@ -449,20 +485,6 @@ const ProspectoDetalle = () => {
           setNuevoSeguimiento(false);
           toast.success("Seguimiento agregado temporalmente");
         }}
-      />
-
-      <FutureFeatureDialog
-        open={modalExcel}
-        onOpenChange={setModalExcel}
-        titulo="Generación del formato de alta en Excel"
-        mensaje="Así funcionará el proceso cuando se conecte el backend. En esta etapa no se genera ningún archivo."
-        detalles={[
-          "1. El sistema tomará los datos del prospecto y del catálogo de servicios.",
-          "2. Se generará un archivo Excel con el formato oficial de alta de cliente.",
-          "3. El archivo quedará disponible para descarga y envío al contacto principal.",
-          "4. Se registrará el evento en el historial del prospecto.",
-        ]}
-        testId="prospecto-modal-excel"
       />
 
       <Dialog open={modalCarga} onOpenChange={setModalCarga}>
